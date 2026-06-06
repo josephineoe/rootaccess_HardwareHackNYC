@@ -1,0 +1,646 @@
+{
+    "containing_directory": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC",
+    "files": [
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/README.md",
+            "tags": [],
+            "classes": [],
+            "functions": [],
+            "includes": [],
+            "included_by": [],
+            "text": "# rootaccess_HardwareHackNYC\nSuper duper funtastic rag tag team building cool hardware stuff\n\n\nTeam Mmebers:\nDana Sy-Ching \nJosephine Odusanya \nKaitlyn Chow\nAlejandro Ojeda\nAnik Zingariello\nIsaac Ting"
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Inc/mpu6050.h",
+            "tags": [
+                "header",
+                "clock_config"
+            ],
+            "classes": [],
+            "functions": [],
+            "includes": [],
+            "included_by": [],
+            "text": "/**\n * @file    mpu6050.h\n * @brief   MPU-6050 driver for STM32 HAL (I2C, polling mode)\n *\n * Register addresses verified against RM-MPU-6000A-00 Rev 4.0.\n *\n * Default configuration applied by MPU6050_Init():\n *   - Clock source  : PLL with X-axis gyro reference (CLKSEL = 1)\n *   - Accel range   : \u00b12 g   \u2192 16384 LSB/g\n *   - Gyro range    : \u00b1250 \u00b0/s \u2192 131 LSB/(\u00b0/s)\n *   - DLPF          : 44 Hz bandwidth (DLPF_CFG = 3)\n *   - Sample rate   : 1 kHz / (1 + 0) = 1 kHz\n *   - Sleep mode    : disabled\n */\n\n#ifndef MPU6050_H\n#define MPU6050_H\n\n#include \"stm32g4xx_hal.h\"\n#include <stdint.h>\n\n/* ------------------------------------------------------------------ */\n/* I2C address                                                          */\n/* ------------------------------------------------------------------ */\n/* AD0 pin LOW  \u2192 0x68, AD0 pin HIGH \u2192 0x69.                          */\n/* The 7-bit address is shifted left by 1 for HAL calls.               */\n#define MPU6050_I2C_ADDR_LOW   (0x68U << 1)   /* AD0 = 0 (default)   */\n#define MPU6050_I2C_ADDR_HIGH  (0x69U << 1)   /* AD0 = 1             */\n\n/* ------------------------------------------------------------------ */\n/* Register map (RM-MPU-6000A-00 \u00a73)                                   */\n/* ------------------------------------------------------------------ */\n#define MPU6050_REG_SMPLRT_DIV    0x19U\n#define MPU6050_REG_CONFIG        0x1AU\n#define MPU6050_REG_GYRO_CONFIG   0x1BU\n#define MPU6050_REG_ACCEL_CONFIG  0x1CU\n#define MPU6050_REG_ACCEL_XOUT_H  0x3BU   /* burst-read start        */\n#define MPU6050_REG_TEMP_OUT_H    0x41U\n#define MPU6050_REG_GYRO_XOUT_H   0x43U\n#define MPU6050_REG_PWR_MGMT_1    0x6BU\n#define MPU6050_REG_WHO_AM_I      0x75U\n\n/* WHO_AM_I expected value (bits [6:1] = 0x34 \u2192 byte = 0x68)          */\n#define MPU6050_WHO_AM_I_VAL      0x68U\n\n/* ------------------------------------------------------------------ */\n/* Sensitivity constants (from datasheet \u00a74.18 / \u00a74.20)                */\n/* ------------------------------------------------------------------ */\n#define MPU6050_ACCEL_SENS_2G     16384.0f   /* LSB/g  at \u00b12 g        */\n#define MPU6050_GYRO_SENS_250DPS  131.0f     /* LSB/(\u00b0/s) at \u00b1250 \u00b0/s */\n\n/* ------------------------------------------------------------------ */\n/* Data structures                                                      */\n/* ------------------------------------------------------------------ */\ntypedef struct {\n    float accel_x;   /* [g]    */\n    float accel_y;\n    float accel_z;\n    float gyro_x;    /* [\u00b0/s]  */\n    float gyro_y;\n    float gyro_z;\n    float temp_c;    /* [\u00b0C]   */\n} MPU6050_Data_t;\n\n/* ------------------------------------------------------------------ */\n/* Return codes                                                         */\n/* ------------------------------------------------------------------ */\ntypedef enum {\n    MPU6050_OK    = 0,\n    MPU6050_ERR   = 1,\n    MPU6050_WRONG_ID = 2\n} MPU6050_Status_t;\n\n/* ------------------------------------------------------------------ */\n/* Public API                                                           */\n/* ------------------------------------------------------------------ */\n\n/**\n * @brief  Initialise the MPU-6050.\n * @param  hi2c   Pointer to the HAL I2C handle.\n * @param  addr   I2C address (MPU6050_I2C_ADDR_LOW or _HIGH).\n * @retval MPU6050_OK on success, MPU6050_WRONG_ID if WHO_AM_I mismatch,\n *         MPU6050_ERR on I2C error.\n */\nMPU6050_Status_t MPU6050_Init(I2C_HandleTypeDef *hi2c, uint8_t addr);\n\n/**\n * @brief  Read accelerometer, gyroscope, and temperature in one burst.\n * @param  hi2c   Pointer to the HAL I2C handle.\n * @param  addr   I2C address used during Init.\n * @param  out    Pointer to the output data structure.\n * @retval MPU6050_OK on success, MPU6050_ERR on I2C error.\n */\nMPU6050_Status_t MPU6050_ReadAll(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                  MPU6050_Data_t *out);\n\n#endif /* MPU6050_H */\n"
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "tags": [
+                "source",
+                "application",
+                "clock_config"
+            ],
+            "classes": [],
+            "functions": [
+                "main",
+                "MX_I2C1_Init",
+                "uart_print",
+                "MX_GPIO_Init",
+                "HAL_I2C_MspDeInit",
+                "HAL_UART_MspDeInit",
+                "Error_Handler",
+                "assert_failed",
+                "SystemClock_Config",
+                "HAL_I2C_MspInit",
+                "MX_USART2_UART_Init",
+                "HAL_UART_MspInit"
+            ],
+            "includes": [],
+            "included_by": [],
+            "text": "/**\n * @file    main.c\n * @brief   NUCLEO-G474RE + MPU-6050 \u2014 accel/gyro readout over UART\n *\n * Hardware connections (Arduino header / morpho):\n * \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n * \u2502 MPU-6050 pin    \u2502 NUCLEO-G474RE pin                            \u2502\n * \u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n * \u2502 VCC             \u2502 3.3 V  (CN6 pin 4)                           \u2502\n * \u2502 GND             \u2502 GND    (CN6 pin 6)                           \u2502\n * \u2502 SCL             \u2502 PB8  \u2013 Arduino D15 / CN5 pin 10  (I2C1_SCL) \u2502\n * \u2502 SDA             \u2502 PB9  \u2013 Arduino D14 / CN5 pin 9   (I2C1_SDA) \u2502\n * \u2502 AD0             \u2502 GND  \u2192 I2C address 0x68 (default)            \u2502\n * \u2502 INT             \u2502 not connected (polling mode)                  \u2502\n * \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n *\n * UART output is routed through the ST-LINK Virtual COM Port (USART2,\n * PA2/PA3) at 115200 8N1 \u2014 open any serial terminal to see the data.\n *\n * CubeMX / CubeIDE peripheral settings required:\n *   \u2022 I2C1  : Standard Mode (100 kHz), PB8=SCL, PB9=SDA\n *   \u2022 USART2: Asynchronous, 115200 baud, 8N1 (ST-LINK VCP)\n *   \u2022 SYS   : Timebase source = SysTick\n *\n * Build: STM32CubeIDE with STM32CubeG4 HAL package.\n */\n\n/* ------------------------------------------------------------------ */\n/* Includes                                                             */\n/* ------------------------------------------------------------------ */\n#include \"main.h\"\n#include \"mpu6050.h\"\n#include <stdio.h>\n#include <string.h>\n\n/* ------------------------------------------------------------------ */\n/* Private peripheral handles (generated by CubeMX / filled manually)  */\n/* ------------------------------------------------------------------ */\nI2C_HandleTypeDef  hi2c1;\nUART_HandleTypeDef huart2;\n\n/* ------------------------------------------------------------------ */\n/* Private function prototypes                                          */\n/* ------------------------------------------------------------------ */\nstatic void SystemClock_Config(void);\nstatic void MX_GPIO_Init(void);\nstatic void MX_I2C1_Init(void);\nstatic void MX_USART2_UART_Init(void);\n\n/* Redirect printf to USART2 */\nstatic void uart_print(const char *str);\n\n/* ------------------------------------------------------------------ */\n/* main                                                                 */\n/* ------------------------------------------------------------------ */\nint main(void)\n{\n    /* HAL init, clock config, peripheral init */\n    HAL_Init();\n    SystemClock_Config();\n    MX_GPIO_Init();\n    MX_USART2_UART_Init();\n    MX_I2C1_Init();\n\n    uart_print(\"\\r\\n=== NUCLEO-G474RE + MPU-6050 ===\\r\\n\");\n\n    /* Initialise MPU-6050 (AD0 = GND \u2192 address 0x68) */\n    MPU6050_Status_t status = MPU6050_Init(&hi2c1, MPU6050_I2C_ADDR_LOW);\n    if (status == MPU6050_WRONG_ID)\n    {\n        uart_print(\"[ERROR] WHO_AM_I mismatch \u2014 check wiring and AD0 pin.\\r\\n\");\n        Error_Handler();\n    }\n    else if (status != MPU6050_OK)\n    {\n        uart_print(\"[ERROR] I2C communication failed \u2014 check pull-ups and connections.\\r\\n\");\n        Error_Handler();\n    }\n\n    uart_print(\"[OK] MPU-6050 initialised.\\r\\n\\r\\n\");\n    uart_print(\"Accel[g]              Gyro[deg/s]           Temp[C]\\r\\n\");\n    uart_print(\"Ax       Ay       Az  Gx       Gy       Gz\\r\\n\");\n    uart_print(\"-------- -------- --- -------- -------- --------\\r\\n\");\n\n    MPU6050_Data_t data;\n    char line[128];\n\n    while (1)\n    {\n        if (MPU6050_ReadAll(&hi2c1, MPU6050_I2C_ADDR_LOW, &data) == MPU6050_OK)\n        {\n            /* Format: fixed-width columns, 3 decimal places */\n            snprintf(line, sizeof(line),\n                     \"%+7.3f  %+7.3f  %+7.3f  \"\n                     \"%+8.2f  %+8.2f  %+8.2f  \"\n                     \"%6.2f\\r\\n\",\n                     data.accel_x, data.accel_y, data.accel_z,\n                     data.gyro_x,  data.gyro_y,  data.gyro_z,\n                     data.temp_c);\n            uart_print(line);\n        }\n        else\n        {\n            uart_print(\"[WARN] Read failed \u2014 retrying...\\r\\n\");\n        }\n\n        HAL_Delay(100); /* 10 Hz print rate */\n    }\n}\n\n/* ------------------------------------------------------------------ */\n/* UART helper                                                          */\n/* ------------------------------------------------------------------ */\nstatic void uart_print(const char *str)\n{\n    HAL_UART_Transmit(&huart2, (const uint8_t *)str, (uint16_t)strlen(str),\n                      HAL_MAX_DELAY);\n}\n\n/* ------------------------------------------------------------------ */\n/* Peripheral initialisations                                           */\n/* ------------------------------------------------------------------ */\n\n/**\n * @brief  System clock configuration for NUCLEO-G474RE.\n *         Uses the 24 MHz HSE on-board, PLL \u2192 170 MHz SYSCLK.\n *         Matches the default CubeMX output for this board.\n */\nstatic void SystemClock_Config(void)\n{\n    RCC_OscInitTypeDef RCC_OscInitStruct = {0};\n    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};\n\n    /** Configure the main internal regulator output voltage */\n    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);\n\n    /** Initialise the RCC Oscillators */\n    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;\n    RCC_OscInitStruct.HSEState       = RCC_HSE_ON;\n    RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;\n    RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;\n    /* 24 MHz HSE \u00d7 (85/2) / 6 = 170 MHz */\n    RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV6;\n    RCC_OscInitStruct.PLL.PLLN = 85;\n    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;\n    RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;\n    RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;\n    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)\n        Error_Handler();\n\n    /** Initialise the CPU, AHB and APB buses clocks */\n    RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK  | RCC_CLOCKTYPE_SYSCLK\n                                     | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;\n    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;\n    RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;\n    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;\n    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;\n    /* Flash latency 4 required at 170 MHz / Vcore boost */\n    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)\n        Error_Handler();\n}\n\n/**\n * @brief  I2C1 initialisation \u2014 Standard Mode 100 kHz, PB8/PB9.\n */\nstatic void MX_I2C1_Init(void)\n{\n    hi2c1.Instance              = I2C1;\n    hi2c1.Init.Timing           = 0x30A0A7FB; /* 100 kHz @ 170 MHz PCLK1 */\n    hi2c1.Init.OwnAddress1      = 0;\n    hi2c1.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;\n    hi2c1.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;\n    hi2c1.Init.OwnAddress2      = 0;\n    hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;\n    hi2c1.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;\n    hi2c1.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;\n    if (HAL_I2C_Init(&hi2c1) != HAL_OK)\n        Error_Handler();\n\n    /* Enable analog and digital filters for noise immunity */\n    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)\n        Error_Handler();\n    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)\n        Error_Handler();\n}\n\n/**\n * @brief  USART2 initialisation \u2014 115200 8N1 (ST-LINK VCP, PA2/PA3).\n */\nstatic void MX_USART2_UART_Init(void)\n{\n    huart2.Instance          = USART2;\n    huart2.Init.BaudRate     = 115200;\n    huart2.Init.WordLength   = UART_WORDLENGTH_8B;\n    huart2.Init.StopBits     = UART_STOPBITS_1;\n    huart2.Init.Parity       = UART_PARITY_NONE;\n    huart2.Init.Mode         = UART_MODE_TX_RX;\n    huart2.Init.HwFlowCtl    = UART_HWCONTROL_NONE;\n    huart2.Init.OverSampling = UART_OVERSAMPLING_16;\n    huart2.Init.OneBitSampling        = UART_ONE_BIT_SAMPLE_DISABLE;\n    huart2.Init.ClockPrescaler        = UART_PRESCALER_DIV1;\n    huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;\n    if (HAL_UART_Init(&huart2) != HAL_OK)\n        Error_Handler();\n}\n\n/**\n * @brief  GPIO initialisation.\n *         The HAL MSP callbacks (HAL_I2C_MspInit, HAL_UART_MspInit) handle\n *         the actual pin alternate-function configuration; this function\n *         enables the user LED (PA5) for optional status indication.\n */\nstatic void MX_GPIO_Init(void)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    __HAL_RCC_GPIOA_CLK_ENABLE();\n\n    /* User LED LD2 on PA5 */\n    GPIO_InitStruct.Pin   = GPIO_PIN_5;\n    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;\n    GPIO_InitStruct.Pull  = GPIO_NOPULL;\n    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;\n    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);\n    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);\n}\n\n/* ------------------------------------------------------------------ */\n/* MSP callbacks \u2014 pin / clock setup called by HAL_xxx_Init()          */\n/* ------------------------------------------------------------------ */\n\n/**\n * @brief  I2C1 MSP Init \u2014 enables clocks and configures PB8/PB9 as\n *         open-drain alternate function (AF4 = I2C1 on STM32G4).\n */\nvoid HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    if (hi2c->Instance == I2C1)\n    {\n        __HAL_RCC_GPIOB_CLK_ENABLE();\n        __HAL_RCC_I2C1_CLK_ENABLE();\n\n        /* PB8 = I2C1_SCL, PB9 = I2C1_SDA (AF4 on STM32G474) */\n        GPIO_InitStruct.Pin       = GPIO_PIN_8 | GPIO_PIN_9;\n        GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;   /* open-drain required for I2C */\n        GPIO_InitStruct.Pull      = GPIO_NOPULL;       /* external pull-ups on breakout */\n        GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;\n        GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;\n        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);\n    }\n}\n\n/**\n * @brief  I2C1 MSP DeInit.\n */\nvoid HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)\n{\n    if (hi2c->Instance == I2C1)\n    {\n        __HAL_RCC_I2C1_FORCE_RESET();\n        __HAL_RCC_I2C1_RELEASE_RESET();\n        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8 | GPIO_PIN_9);\n    }\n}\n\n/**\n * @brief  USART2 MSP Init \u2014 PA2 (TX) / PA3 (RX), AF7.\n */\nvoid HAL_UART_MspInit(UART_HandleTypeDef *huart)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    if (huart->Instance == USART2)\n    {\n        __HAL_RCC_GPIOA_CLK_ENABLE();\n        __HAL_RCC_USART2_CLK_ENABLE();\n\n        /* PA2 = USART2_TX, PA3 = USART2_RX (AF7 on STM32G474) */\n        GPIO_InitStruct.Pin       = GPIO_PIN_2 | GPIO_PIN_3;\n        GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;\n        GPIO_InitStruct.Pull      = GPIO_NOPULL;\n        GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;\n        GPIO_InitStruct.Alternate = GPIO_AF7_USART2;\n        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);\n    }\n}\n\n/**\n * @brief  USART2 MSP DeInit.\n */\nvoid HAL_UART_MspDeInit(UART_HandleTypeDef *huart)\n{\n    if (huart->Instance == USART2)\n    {\n        __HAL_RCC_USART2_FORCE_RESET();\n        __HAL_RCC_USART2_RELEASE_RESET();\n        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2 | GPIO_PIN_3);\n    }\n}\n\n/* ------------------------------------------------------------------ */\n/* Error handler                                                        */\n/* ------------------------------------------------------------------ */\nvoid Error_Handler(void)\n{\n    __disable_irq();\n    /* Blink LD2 rapidly to signal a fault */\n    while (1)\n    {\n        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);\n        for (volatile uint32_t i = 0; i < 500000UL; i++);\n    }\n}\n\n#ifdef USE_FULL_ASSERT\nvoid assert_failed(uint8_t *file, uint32_t line)\n{\n    (void)file; (void)line;\n}\n#endif\n"
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/mpu6050.c",
+            "tags": [
+                "source",
+                "clock_config"
+            ],
+            "classes": [],
+            "functions": [
+                "write_reg",
+                "MPU6050_ReadAll",
+                "read_regs",
+                "MPU6050_Init"
+            ],
+            "includes": [],
+            "included_by": [],
+            "text": "/**\n * @file    mpu6050.c\n * @brief   MPU-6050 driver implementation for STM32 HAL (I2C, polling)\n *\n * All register addresses and sensitivity values are taken directly from\n * the InvenSense register map document RM-MPU-6000A-00 Rev 4.0.\n */\n\n#include \"mpu6050.h\"\n\n/* ------------------------------------------------------------------ */\n/* Internal helpers                                                     */\n/* ------------------------------------------------------------------ */\n\n#define I2C_TIMEOUT_MS  100U\n\n/**\n * Write a single byte to a register.\n */\nstatic MPU6050_Status_t write_reg(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                   uint8_t reg, uint8_t val)\n{\n    uint8_t buf[2] = { reg, val };\n    if (HAL_I2C_Master_Transmit(hi2c, addr, buf, 2, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    return MPU6050_OK;\n}\n\n/**\n * Read one or more bytes starting at a register address.\n * The MPU-6050 auto-increments the internal register pointer on burst reads.\n */\nstatic MPU6050_Status_t read_regs(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                   uint8_t reg, uint8_t *buf, uint16_t len)\n{\n    /* Send register address */\n    if (HAL_I2C_Master_Transmit(hi2c, addr, &reg, 1, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    /* Receive data */\n    if (HAL_I2C_Master_Receive(hi2c, addr, buf, len, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    return MPU6050_OK;\n}\n\n/* ------------------------------------------------------------------ */\n/* Public API                                                           */\n/* ------------------------------------------------------------------ */\n\nMPU6050_Status_t MPU6050_Init(I2C_HandleTypeDef *hi2c, uint8_t addr)\n{\n    uint8_t who_am_i = 0;\n\n    /* 1. Verify device identity ------------------------------------ */\n    if (read_regs(hi2c, addr, MPU6050_REG_WHO_AM_I, &who_am_i, 1) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    if (who_am_i != MPU6050_WHO_AM_I_VAL)\n        return MPU6050_WRONG_ID;\n\n    /* 2. Wake the device up (reset value of PWR_MGMT_1 = 0x40 = SLEEP)\n     *    CLKSEL = 1 \u2192 PLL with X-axis gyro reference (recommended)   */\n    if (write_reg(hi2c, addr, MPU6050_REG_PWR_MGMT_1, 0x01U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    HAL_Delay(10); /* allow oscillator to stabilise */\n\n    /* 3. Sample rate divider: SMPLRT_DIV = 0 \u2192 Fs = 1 kHz           */\n    if (write_reg(hi2c, addr, MPU6050_REG_SMPLRT_DIV, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 4. DLPF: DLPF_CFG = 3 \u2192 accel BW 44 Hz, gyro BW 42 Hz        */\n    if (write_reg(hi2c, addr, MPU6050_REG_CONFIG, 0x03U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 5. Gyro full-scale: FS_SEL = 0 \u2192 \u00b1250 \u00b0/s                     */\n    if (write_reg(hi2c, addr, MPU6050_REG_GYRO_CONFIG, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 6. Accel full-scale: AFS_SEL = 0 \u2192 \u00b12 g                       */\n    if (write_reg(hi2c, addr, MPU6050_REG_ACCEL_CONFIG, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    return MPU6050_OK;\n}\n\nMPU6050_Status_t MPU6050_ReadAll(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                  MPU6050_Data_t *out)\n{\n    /*\n     * Burst-read 14 bytes starting at ACCEL_XOUT_H (0x3B):\n     *   [0-1]  ACCEL_XOUT  H/L\n     *   [2-3]  ACCEL_YOUT  H/L\n     *   [4-5]  ACCEL_ZOUT  H/L\n     *   [6-7]  TEMP_OUT    H/L\n     *   [8-9]  GYRO_XOUT   H/L\n     *   [10-11] GYRO_YOUT  H/L\n     *   [12-13] GYRO_ZOUT  H/L\n     *\n     * All values are 16-bit two's complement (RM-MPU-6000A-00 \u00a74.18\u20134.20).\n     */\n    uint8_t raw[14];\n\n    if (read_regs(hi2c, addr, MPU6050_REG_ACCEL_XOUT_H, raw, 14) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    int16_t ax_raw = (int16_t)((raw[0]  << 8) | raw[1]);\n    int16_t ay_raw = (int16_t)((raw[2]  << 8) | raw[3]);\n    int16_t az_raw = (int16_t)((raw[4]  << 8) | raw[5]);\n    int16_t t_raw  = (int16_t)((raw[6]  << 8) | raw[7]);\n    int16_t gx_raw = (int16_t)((raw[8]  << 8) | raw[9]);\n    int16_t gy_raw = (int16_t)((raw[10] << 8) | raw[11]);\n    int16_t gz_raw = (int16_t)((raw[12] << 8) | raw[13]);\n\n    /* Convert to physical units */\n    out->accel_x = (float)ax_raw / MPU6050_ACCEL_SENS_2G;\n    out->accel_y = (float)ay_raw / MPU6050_ACCEL_SENS_2G;\n    out->accel_z = (float)az_raw / MPU6050_ACCEL_SENS_2G;\n\n    /* Temperature formula from RM-MPU-6000A-00 \u00a74.19 */\n    out->temp_c  = (float)t_raw / 340.0f + 36.53f;\n\n    out->gyro_x  = (float)gx_raw / MPU6050_GYRO_SENS_250DPS;\n    out->gyro_y  = (float)gy_raw / MPU6050_GYRO_SENS_250DPS;\n    out->gyro_z  = (float)gz_raw / MPU6050_GYRO_SENS_250DPS;\n\n    return MPU6050_OK;\n}\n"
+        }
+    ],
+    "functions": [
+        {
+            "name": "main",
+            "in_scope": true,
+            "calls": [
+                "SystemClock_Config",
+                "uart_print",
+                "MX_I2C1_Init",
+                "MX_GPIO_Init",
+                "HAL_Init",
+                "MX_USART2_UART_Init",
+                "MPU6050_Init",
+                "HAL_Delay",
+                "Error_Handler",
+                "MPU6050_ReadAll",
+                "snprintf"
+            ],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "int main(void)\n{\n    /* HAL init, clock config, peripheral init */\n    HAL_Init();\n    SystemClock_Config();\n    MX_GPIO_Init();\n    MX_USART2_UART_Init();\n    MX_I2C1_Init();\n\n    uart_print(\"\\r\\n=== NUCLEO-G474RE + MPU-6050 ===\\r\\n\");\n\n    /* Initialise MPU-6050 (AD0 = GND \u2192 address 0x68) */\n    MPU6050_Status_t status = MPU6050_Init(&hi2c1, MPU6050_I2C_ADDR_LOW);\n    if (status == MPU6050_WRONG_ID)\n    {\n        uart_print(\"[ERROR] WHO_AM_I mismatch \u2014 check wiring and AD0 pin.\\r\\n\");\n        Error_Handler();\n    }\n    else if (status != MPU6050_OK)\n    {\n        uart_print(\"[ERROR] I2C communication failed \u2014 check pull-ups and connections.\\r\\n\");\n        Error_Handler();\n    }\n\n    uart_print(\"[OK] MPU-6050 initialised.\\r\\n\\r\\n\");\n    uart_print(\"Accel[g]              Gyro[deg/s]           Temp[C]\\r\\n\");\n    uart_print(\"Ax       Ay       Az  Gx       Gy       Gz\\r\\n\");\n    uart_print(\"-------- -------- --- -------- -------- --------\\r\\n\");\n\n    MPU6050_Data_t data;\n    char line[128];\n\n    while (1)\n    {\n        if (MPU6050_ReadAll(&hi2c1, MPU6050_I2C_ADDR_LOW, &data) == MPU6050_OK)\n        {\n            /* Format: fixed-width columns, 3 decimal places */\n            snprintf(line, sizeof(line),\n                     \"%+7.3f  %+7.3f  %+7.3f  \"\n                     \"%+8.2f  %+8.2f  %+8.2f  \"\n                     \"%6.2f\\r\\n\",\n                     data.accel_x, data.accel_y, data.accel_z,\n                     data.gyro_x,  data.gyro_y,  data.gyro_z,\n                     data.temp_c);\n            uart_print(line);\n        }\n        else\n        {\n            uart_print(\"[WARN] Read failed \u2014 retrying...\\r\\n\");\n        }\n\n        HAL_Delay(100); /* 10 Hz print rate */\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 55,
+                "line_end": 108,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "MX_I2C1_Init",
+            "in_scope": true,
+            "calls": [
+                "HAL_I2C_Init",
+                "HAL_I2CEx_ConfigDigitalFilter",
+                "Error_Handler",
+                "HAL_I2CEx_ConfigAnalogFilter"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "static void MX_I2C1_Init(void)\n{\n    hi2c1.Instance              = I2C1;\n    hi2c1.Init.Timing           = 0x30A0A7FB; /* 100 kHz @ 170 MHz PCLK1 */\n    hi2c1.Init.OwnAddress1      = 0;\n    hi2c1.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;\n    hi2c1.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;\n    hi2c1.Init.OwnAddress2      = 0;\n    hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;\n    hi2c1.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;\n    hi2c1.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;\n    if (HAL_I2C_Init(&hi2c1) != HAL_OK)\n        Error_Handler();\n\n    /* Enable analog and digital filters for noise immunity */\n    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)\n        Error_Handler();\n    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)\n        Error_Handler();\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 165,
+                "line_end": 184,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "uart_print",
+            "in_scope": true,
+            "calls": [
+                "HAL_UART_Transmit",
+                "strlen"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "static void uart_print(const char *str)\n{\n    HAL_UART_Transmit(&huart2, (const uint8_t *)str, (uint16_t)strlen(str),\n                      HAL_MAX_DELAY);\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 113,
+                "line_end": 117,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "MX_GPIO_Init",
+            "in_scope": true,
+            "calls": [
+                "__HAL_RCC_GPIOA_CLK_ENABLE",
+                "HAL_GPIO_WritePin",
+                "HAL_GPIO_Init"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "static void MX_GPIO_Init(void)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    __HAL_RCC_GPIOA_CLK_ENABLE();\n\n    /* User LED LD2 on PA5 */\n    GPIO_InitStruct.Pin   = GPIO_PIN_5;\n    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;\n    GPIO_InitStruct.Pull  = GPIO_NOPULL;\n    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;\n    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);\n    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 212,
+                "line_end": 225,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "HAL_UART_MspInit",
+            "in_scope": true,
+            "calls": [
+                "__HAL_RCC_GPIOA_CLK_ENABLE",
+                "__HAL_RCC_USART2_CLK_ENABLE",
+                "HAL_GPIO_Init"
+            ],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "void HAL_UART_MspInit(UART_HandleTypeDef *huart)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    if (huart->Instance == USART2)\n    {\n        __HAL_RCC_GPIOA_CLK_ENABLE();\n        __HAL_RCC_USART2_CLK_ENABLE();\n\n        /* PA2 = USART2_TX, PA3 = USART2_RX (AF7 on STM32G474) */\n        GPIO_InitStruct.Pin       = GPIO_PIN_2 | GPIO_PIN_3;\n        GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;\n        GPIO_InitStruct.Pull      = GPIO_NOPULL;\n        GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;\n        GPIO_InitStruct.Alternate = GPIO_AF7_USART2;\n        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 270,
+                "line_end": 287,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "HAL_UART_MspDeInit",
+            "in_scope": true,
+            "calls": [
+                "__HAL_RCC_USART2_FORCE_RESET",
+                "__HAL_RCC_USART2_RELEASE_RESET",
+                "HAL_GPIO_DeInit"
+            ],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)\n{\n    if (huart->Instance == USART2)\n    {\n        __HAL_RCC_USART2_FORCE_RESET();\n        __HAL_RCC_USART2_RELEASE_RESET();\n        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2 | GPIO_PIN_3);\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 292,
+                "line_end": 300,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "Error_Handler",
+            "in_scope": true,
+            "calls": [
+                "__disable_irq",
+                "HAL_GPIO_TogglePin"
+            ],
+            "is_called_by": [
+                "main",
+                "MX_I2C1_Init",
+                "SystemClock_Config",
+                "MX_USART2_UART_Init"
+            ],
+            "scope": "global",
+            "text": "void Error_Handler(void)\n{\n    __disable_irq();\n    /* Blink LD2 rapidly to signal a fault */\n    while (1)\n    {\n        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);\n        for (volatile uint32_t i = 0; i < 500000UL; i++);\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 305,
+                "line_end": 314,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "SystemClock_Config",
+            "in_scope": true,
+            "calls": [
+                "HAL_PWREx_ControlVoltageScaling",
+                "Error_Handler",
+                "HAL_RCC_ClockConfig",
+                "HAL_RCC_OscConfig"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "static void SystemClock_Config(void)\n{\n    RCC_OscInitTypeDef RCC_OscInitStruct = {0};\n    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};\n\n    /** Configure the main internal regulator output voltage */\n    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);\n\n    /** Initialise the RCC Oscillators */\n    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;\n    RCC_OscInitStruct.HSEState       = RCC_HSE_ON;\n    RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_ON;\n    RCC_OscInitStruct.PLL.PLLSource  = RCC_PLLSOURCE_HSE;\n    /* 24 MHz HSE \u00d7 (85/2) / 6 = 170 MHz */\n    RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV6;\n    RCC_OscInitStruct.PLL.PLLN = 85;\n    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;\n    RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;\n    RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;\n    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)\n        Error_Handler();\n\n    /** Initialise the CPU, AHB and APB buses clocks */\n    RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK  | RCC_CLOCKTYPE_SYSCLK\n                                     | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;\n    RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;\n    RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;\n    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;\n    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;\n    /* Flash latency 4 required at 170 MHz / Vcore boost */\n    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)\n        Error_Handler();\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 128,
+                "line_end": 160,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "HAL_I2C_MspInit",
+            "in_scope": true,
+            "calls": [
+                "__HAL_RCC_GPIOB_CLK_ENABLE",
+                "__HAL_RCC_I2C1_CLK_ENABLE",
+                "HAL_GPIO_Init"
+            ],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)\n{\n    GPIO_InitTypeDef GPIO_InitStruct = {0};\n\n    if (hi2c->Instance == I2C1)\n    {\n        __HAL_RCC_GPIOB_CLK_ENABLE();\n        __HAL_RCC_I2C1_CLK_ENABLE();\n\n        /* PB8 = I2C1_SCL, PB9 = I2C1_SDA (AF4 on STM32G474) */\n        GPIO_InitStruct.Pin       = GPIO_PIN_8 | GPIO_PIN_9;\n        GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;   /* open-drain required for I2C */\n        GPIO_InitStruct.Pull      = GPIO_NOPULL;       /* external pull-ups on breakout */\n        GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;\n        GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;\n        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 235,
+                "line_end": 252,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "MX_USART2_UART_Init",
+            "in_scope": true,
+            "calls": [
+                "HAL_UART_Init",
+                "Error_Handler"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "static void MX_USART2_UART_Init(void)\n{\n    huart2.Instance          = USART2;\n    huart2.Init.BaudRate     = 115200;\n    huart2.Init.WordLength   = UART_WORDLENGTH_8B;\n    huart2.Init.StopBits     = UART_STOPBITS_1;\n    huart2.Init.Parity       = UART_PARITY_NONE;\n    huart2.Init.Mode         = UART_MODE_TX_RX;\n    huart2.Init.HwFlowCtl    = UART_HWCONTROL_NONE;\n    huart2.Init.OverSampling = UART_OVERSAMPLING_16;\n    huart2.Init.OneBitSampling        = UART_ONE_BIT_SAMPLE_DISABLE;\n    huart2.Init.ClockPrescaler        = UART_PRESCALER_DIV1;\n    huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;\n    if (HAL_UART_Init(&huart2) != HAL_OK)\n        Error_Handler();\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 189,
+                "line_end": 204,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "HAL_I2C_MspDeInit",
+            "in_scope": true,
+            "calls": [
+                "__HAL_RCC_I2C1_FORCE_RESET",
+                "HAL_GPIO_DeInit",
+                "__HAL_RCC_I2C1_RELEASE_RESET"
+            ],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c)\n{\n    if (hi2c->Instance == I2C1)\n    {\n        __HAL_RCC_I2C1_FORCE_RESET();\n        __HAL_RCC_I2C1_RELEASE_RESET();\n        HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8 | GPIO_PIN_9);\n    }\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 257,
+                "line_end": 265,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "assert_failed",
+            "in_scope": true,
+            "calls": [],
+            "is_called_by": [],
+            "scope": "global",
+            "text": "void assert_failed(uint8_t *file, uint32_t line)\n{\n    (void)file; (void)line;\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/main.c",
+            "location": {
+                "line_start": 317,
+                "line_end": 320,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "write_reg",
+            "in_scope": true,
+            "calls": [
+                "HAL_I2C_Master_Transmit"
+            ],
+            "is_called_by": [
+                "MPU6050_Init"
+            ],
+            "scope": "global",
+            "text": "static MPU6050_Status_t write_reg(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                   uint8_t reg, uint8_t val)\n{\n    uint8_t buf[2] = { reg, val };\n    if (HAL_I2C_Master_Transmit(hi2c, addr, buf, 2, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    return MPU6050_OK;\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/mpu6050.c",
+            "location": {
+                "line_start": 19,
+                "line_end": 26,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "read_regs",
+            "in_scope": true,
+            "calls": [
+                "HAL_I2C_Master_Transmit",
+                "HAL_I2C_Master_Receive"
+            ],
+            "is_called_by": [
+                "MPU6050_ReadAll",
+                "MPU6050_Init"
+            ],
+            "scope": "global",
+            "text": "static MPU6050_Status_t read_regs(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                   uint8_t reg, uint8_t *buf, uint16_t len)\n{\n    /* Send register address */\n    if (HAL_I2C_Master_Transmit(hi2c, addr, &reg, 1, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    /* Receive data */\n    if (HAL_I2C_Master_Receive(hi2c, addr, buf, len, I2C_TIMEOUT_MS) != HAL_OK)\n        return MPU6050_ERR;\n    return MPU6050_OK;\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/mpu6050.c",
+            "location": {
+                "line_start": 32,
+                "line_end": 42,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "MPU6050_ReadAll",
+            "in_scope": true,
+            "calls": [
+                "read_regs"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "MPU6050_Status_t MPU6050_ReadAll(I2C_HandleTypeDef *hi2c, uint8_t addr,\n                                  MPU6050_Data_t *out)\n{\n    /*\n     * Burst-read 14 bytes starting at ACCEL_XOUT_H (0x3B):\n     *   [0-1]  ACCEL_XOUT  H/L\n     *   [2-3]  ACCEL_YOUT  H/L\n     *   [4-5]  ACCEL_ZOUT  H/L\n     *   [6-7]  TEMP_OUT    H/L\n     *   [8-9]  GYRO_XOUT   H/L\n     *   [10-11] GYRO_YOUT  H/L\n     *   [12-13] GYRO_ZOUT  H/L\n     *\n     * All values are 16-bit two's complement (RM-MPU-6000A-00 \u00a74.18\u20134.20).\n     */\n    uint8_t raw[14];\n\n    if (read_regs(hi2c, addr, MPU6050_REG_ACCEL_XOUT_H, raw, 14) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    int16_t ax_raw = (int16_t)((raw[0]  << 8) | raw[1]);\n    int16_t ay_raw = (int16_t)((raw[2]  << 8) | raw[3]);\n    int16_t az_raw = (int16_t)((raw[4]  << 8) | raw[5]);\n    int16_t t_raw  = (int16_t)((raw[6]  << 8) | raw[7]);\n    int16_t gx_raw = (int16_t)((raw[8]  << 8) | raw[9]);\n    int16_t gy_raw = (int16_t)((raw[10] << 8) | raw[11]);\n    int16_t gz_raw = (int16_t)((raw[12] << 8) | raw[13]);\n\n    /* Convert to physical units */\n    out->accel_x = (float)ax_raw / MPU6050_ACCEL_SENS_2G;\n    out->accel_y = (float)ay_raw / MPU6050_ACCEL_SENS_2G;\n    out->accel_z = (float)az_raw / MPU6050_ACCEL_SENS_2G;\n\n    /* Temperature formula from RM-MPU-6000A-00 \u00a74.19 */\n    out->temp_c  = (float)t_raw / 340.0f + 36.53f;\n\n    out->gyro_x  = (float)gx_raw / MPU6050_GYRO_SENS_250DPS;\n    out->gyro_y  = (float)gy_raw / MPU6050_GYRO_SENS_250DPS;\n    out->gyro_z  = (float)gz_raw / MPU6050_GYRO_SENS_250DPS;\n\n    return MPU6050_OK;\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/mpu6050.c",
+            "location": {
+                "line_start": 85,
+                "line_end": 126,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "MPU6050_Init",
+            "in_scope": true,
+            "calls": [
+                "read_regs",
+                "write_reg",
+                "HAL_Delay"
+            ],
+            "is_called_by": [
+                "main"
+            ],
+            "scope": "global",
+            "text": "MPU6050_Status_t MPU6050_Init(I2C_HandleTypeDef *hi2c, uint8_t addr)\n{\n    uint8_t who_am_i = 0;\n\n    /* 1. Verify device identity ------------------------------------ */\n    if (read_regs(hi2c, addr, MPU6050_REG_WHO_AM_I, &who_am_i, 1) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    if (who_am_i != MPU6050_WHO_AM_I_VAL)\n        return MPU6050_WRONG_ID;\n\n    /* 2. Wake the device up (reset value of PWR_MGMT_1 = 0x40 = SLEEP)\n     *    CLKSEL = 1 \u2192 PLL with X-axis gyro reference (recommended)   */\n    if (write_reg(hi2c, addr, MPU6050_REG_PWR_MGMT_1, 0x01U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    HAL_Delay(10); /* allow oscillator to stabilise */\n\n    /* 3. Sample rate divider: SMPLRT_DIV = 0 \u2192 Fs = 1 kHz           */\n    if (write_reg(hi2c, addr, MPU6050_REG_SMPLRT_DIV, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 4. DLPF: DLPF_CFG = 3 \u2192 accel BW 44 Hz, gyro BW 42 Hz        */\n    if (write_reg(hi2c, addr, MPU6050_REG_CONFIG, 0x03U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 5. Gyro full-scale: FS_SEL = 0 \u2192 \u00b1250 \u00b0/s                     */\n    if (write_reg(hi2c, addr, MPU6050_REG_GYRO_CONFIG, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    /* 6. Accel full-scale: AFS_SEL = 0 \u2192 \u00b12 g                       */\n    if (write_reg(hi2c, addr, MPU6050_REG_ACCEL_CONFIG, 0x00U) != MPU6050_OK)\n        return MPU6050_ERR;\n\n    return MPU6050_OK;\n}",
+            "file": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Core/Src/mpu6050.c",
+            "location": {
+                "line_start": 48,
+                "line_end": 83,
+                "column_start": 0,
+                "column_end": 1
+            }
+        },
+        {
+            "name": "HAL_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "main"
+            ]
+        },
+        {
+            "name": "HAL_Delay",
+            "in_scope": false,
+            "is_called_by": [
+                "main"
+            ]
+        },
+        {
+            "name": "snprintf",
+            "in_scope": false,
+            "is_called_by": [
+                "main"
+            ]
+        },
+        {
+            "name": "HAL_I2C_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_I2C1_Init"
+            ]
+        },
+        {
+            "name": "HAL_I2CEx_ConfigDigitalFilter",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_I2C1_Init"
+            ]
+        },
+        {
+            "name": "HAL_I2CEx_ConfigAnalogFilter",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_I2C1_Init"
+            ]
+        },
+        {
+            "name": "HAL_UART_Transmit",
+            "in_scope": false,
+            "is_called_by": [
+                "uart_print"
+            ]
+        },
+        {
+            "name": "strlen",
+            "in_scope": false,
+            "is_called_by": [
+                "uart_print"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_GPIOA_CLK_ENABLE",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_GPIO_Init"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_WritePin",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_GPIO_Init"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_GPIO_Init"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_GPIOA_CLK_ENABLE",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspInit"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_USART2_CLK_ENABLE",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspInit"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspInit"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_USART2_FORCE_RESET",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspDeInit"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_USART2_RELEASE_RESET",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspDeInit"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_DeInit",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_UART_MspDeInit"
+            ]
+        },
+        {
+            "name": "__disable_irq",
+            "in_scope": false,
+            "is_called_by": [
+                "Error_Handler"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_TogglePin",
+            "in_scope": false,
+            "is_called_by": [
+                "Error_Handler"
+            ]
+        },
+        {
+            "name": "HAL_PWREx_ControlVoltageScaling",
+            "in_scope": false,
+            "is_called_by": [
+                "SystemClock_Config"
+            ]
+        },
+        {
+            "name": "HAL_RCC_ClockConfig",
+            "in_scope": false,
+            "is_called_by": [
+                "SystemClock_Config"
+            ]
+        },
+        {
+            "name": "HAL_RCC_OscConfig",
+            "in_scope": false,
+            "is_called_by": [
+                "SystemClock_Config"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_GPIOB_CLK_ENABLE",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspInit"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_I2C1_CLK_ENABLE",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspInit"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspInit"
+            ]
+        },
+        {
+            "name": "HAL_UART_Init",
+            "in_scope": false,
+            "is_called_by": [
+                "MX_USART2_UART_Init"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_I2C1_FORCE_RESET",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspDeInit"
+            ]
+        },
+        {
+            "name": "HAL_GPIO_DeInit",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspDeInit"
+            ]
+        },
+        {
+            "name": "__HAL_RCC_I2C1_RELEASE_RESET",
+            "in_scope": false,
+            "is_called_by": [
+                "HAL_I2C_MspDeInit"
+            ]
+        },
+        {
+            "name": "HAL_I2C_Master_Transmit",
+            "in_scope": false,
+            "is_called_by": [
+                "write_reg"
+            ]
+        },
+        {
+            "name": "HAL_I2C_Master_Transmit",
+            "in_scope": false,
+            "is_called_by": [
+                "read_regs"
+            ]
+        },
+        {
+            "name": "HAL_I2C_Master_Receive",
+            "in_scope": false,
+            "is_called_by": [
+                "read_regs"
+            ]
+        },
+        {
+            "name": "HAL_Delay",
+            "in_scope": false,
+            "is_called_by": [
+                "MPU6050_Init"
+            ]
+        }
+    ],
+    "unprocessed_files": [
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/SEB.MD",
+            "tags": []
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Datasheets/sg90_datasheet.pdf",
+            "tags": []
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Datasheets/RM-MPU-6000A.pdf",
+            "tags": []
+        },
+        {
+            "file_path": "/home/aojedao/Documents/HardwareHack/rootaccess_HardwareHackNYC/Datasheets/nucleo-g474re.pdf",
+            "tags": []
+        }
+    ]
+}
