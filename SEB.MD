@@ -1,18 +1,23 @@
 # Project Context
 
 ## Target Hardware
-- **Primary MCU/Processor**:
-- **Secondary Processors**:
-- **Dev Board / Custom PCB**:
+- **Primary MCU/Processor**: STM32G474RE
+- **Secondary Processors**: MPU-6050 (IMU — accel/gyro/temp via I2C)
+- **Dev Board / Custom PCB**: NUCLEO-G474RE
 - **Board Revision**:
 
 ## Clock Configuration
-- **HSE/HSI**:
-- **PLL Config**:
-- **System Clock Frequency**:
+- **HSE/HSI**: HSE 24 MHz (on-board)
+- **PLL Config**: PLLM=DIV6, PLLN=85, PLLR=DIV2 → 170 MHz
+- **System Clock Frequency**: 170 MHz
 
 ## Pin Mapping / GPIO Assignments
--
+- PA2: USART2_TX (ST-LINK VCP)
+- PA3: USART2_RX (ST-LINK VCP)
+- PA5: LD2 user LED (output)
+- PB4: TIM3_CH1 PWM — SG90 servo signal (Arduino D5 / CN9 pin 6)
+- PB8: I2C1_SCL — MPU-6050 (Arduino D15 / CN5 pin 10)
+- PB9: I2C1_SDA — MPU-6050 (Arduino D14 / CN5 pin 9)
 
 ## Memory Layout
 - **Flash Size**:
@@ -26,8 +31,9 @@
 -
 
 ## Communication Protocols
-- **Protocol (e.g. CAN, UART, SPI, I2C)**:
-- **Baud Rate / Mode**:
+- **Protocol (e.g. CAN, UART, SPI, I2C)**: I2C1 (MPU-6050), USART2 (ST-LINK VCP debug output)
+- **Baud Rate / Mode**: I2C 100 kHz Standard Mode; UART 115200 8N1
+- **I2C Pins**: SCL → PB8 (Arduino D15 / CN5 pin 10), SDA → PB9 (Arduino D14 / CN5 pin 9)
 
 ## Software Stack
 - **Build System**: 
