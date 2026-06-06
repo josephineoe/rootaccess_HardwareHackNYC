@@ -8,13 +8,21 @@
             "functions": [],
             "includes": [],
             "included_by": [],
-            "text": "# rootaccess_HardwareHackNYC\nSuper duper funtastic rag tag team building cool hardware stuff\n\n\nTeam Mmebers:\nDana Sy-Ching \nJosephine Odusanya \nKaitlyn Chow\nAlejandro Ojeda\nAnik Zingariello\nIsaac Ting"
+            "text": "# rootaccess_HardwareHackNYC\nSuper duper funtastic rag tag team building cool hardware stuff\n\n\nTeam Mmebers:\nDana Sy-Ching \nJosephine Odusanya \nKaitlyn Chow\nAlejandro Ojeda\nAnik Zingariello\nIsaac Ting\n\n\nNYTECHWEEK\n\nHardware Hack\nTHEME \u2014 THE WORLD IS YOUR CONTROLLER\n\nPhysical interfaces have always relied on buttons and screens. Your challenge is different. Use the MPU-6050 to read motion, orientation, and gesture from the real world and translate that data into physical action through the SG90 servo, LEDs, and the serial terminal output. Build firmware that makes hardware feel alive \u2014 gesture-driven, motion-reactive, and running entirely on the metal."
         }
     ],
     "functions": [],
     "unprocessed_files": [
         {
             "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\SEB.MD",
+            "tags": []
+        },
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\Datasheets\\Adafruit Stemma Speaker.pdf",
+            "tags": []
+        },
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\Datasheets\\MCP9808.pdf",
             "tags": []
         },
         {
