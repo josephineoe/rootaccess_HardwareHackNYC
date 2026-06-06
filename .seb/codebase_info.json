@@ -1,0 +1,33 @@
+{
+    "containing_directory": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC",
+    "files": [
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\README.md",
+            "tags": [],
+            "classes": [],
+            "functions": [],
+            "includes": [],
+            "included_by": [],
+            "text": "# rootaccess_HardwareHackNYC\nSuper duper funtastic rag tag team building cool hardware stuff\n\n\nTeam Mmebers:\nDana Sy-Ching \nJosephine Odusanya \nKaitlyn Chow\nAlejandro Ojeda\nAnik Zingariello\nIsaac Ting"
+        }
+    ],
+    "functions": [],
+    "unprocessed_files": [
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\SEB.MD",
+            "tags": []
+        },
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\Datasheets\\nucleo-g474re.pdf",
+            "tags": []
+        },
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\Datasheets\\RM-MPU-6000A.pdf",
+            "tags": []
+        },
+        {
+            "file_path": "C:\\Users\\JosephineOE\\Documents\\rootaccess_HardwareHackNYC\\Datasheets\\sg90_datasheet.pdf",
+            "tags": []
+        }
+    ]
+}
